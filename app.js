@@ -1,25 +1,15 @@
-var net = require('net');
+var io = require('socket.io').listen(3004);
 
-var HOST = '0.0.0.0';
-var PORT = 3004;
-var users = [];
-net.createServer(function(sock) {
-	console.log('CONNECTED: ' + sock.remoteAddress +':'+ sock.remotePort);
-	users.push(sock);
-	if(users.length>1)
-	{
-		sock.write("start\n");
-	}		
-	sock.on('data', function(data) {
-		users[0].write(sock.remoteAddress+'\n');	
-	});
-	sock.on('close', function(data) {
-		users.splice(users.indexOf(sock), 1);
-		console.log(users+'\n');
-		console.log('Closed: ' + sock.remoteAddress + ':' +sock.remotePort);
-	});
+io.sockets.on('connection', function (socket) {
+ console.log("New connection"); 
+ io.sockets.emit('this', { will: 'be received by everyone'});
 
-}).listen(PORT, HOST);
+  socket.on('private message', function (from, msg) {
+    console.log('I received a private message by ', from, ' saying ', msg);
+  });
 
-console.log('Server listening on ' +HOST + ':' + PORT);
-
+  socket.on('disconnect', function () {
+    	console.log("User disconnected");
+	io.sockets.emit('user disconnected');
+  });
+});
